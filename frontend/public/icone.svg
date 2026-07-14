@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Ícone do RotaKids: uma van escolar azul com pino de rota -->
+  <rect x="4" y="22" width="44" height="24" rx="6" fill="#2563eb"/>
+  <rect x="8" y="26" width="10" height="8" rx="2" fill="#dbeafe"/>
+  <rect x="21" y="26" width="10" height="8" rx="2" fill="#dbeafe"/>
+  <rect x="34" y="26" width="10" height="8" rx="2" fill="#dbeafe"/>
+  <circle cx="14" cy="48" r="6" fill="#1e293b"/>
+  <circle cx="14" cy="48" r="2.5" fill="#94a3b8"/>
+  <circle cx="38" cy="48" r="6" fill="#1e293b"/>
+  <circle cx="38" cy="48" r="2.5" fill="#94a3b8"/>
+  <path d="M52 8c-5 0-9 4-9 9 0 6.75 9 15 9 15s9-8.25 9-15c0-5-4-9-9-9z" fill="#16a34a"/>
+  <circle cx="52" cy="17" r="3.5" fill="#fff"/>
+</svg>

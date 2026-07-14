@@ -27,6 +27,16 @@ pipeline {
             }
         }
 
+        stage('Front-end (React): testes e build') {
+            steps {
+                dir('rotakids/frontend') {
+                    sh 'npm ci || npm install'
+                    sh 'npm test'
+                    sh 'npm run build'
+                }
+            }
+        }
+
         stage('Build da imagem Docker') {
             steps {
                 dir('rotakids') {

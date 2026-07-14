@@ -1,0 +1,192 @@
+/* ============================================================
+   RotaKids — tema azul (a cor da confiança no trânsito 🚐)
+   ============================================================ */
+
+:root {
+  --azul-900: #1e3a8a;
+  --azul-700: #1d4ed8;
+  --azul-600: #2563eb;
+  --azul-100: #dbeafe;
+  --azul-50: #eff6ff;
+  --verde: #16a34a;
+  --vermelho: #dc2626;
+  --fundo: #f1f5f9;
+  --card: #ffffff;
+  --texto: #0f172a;
+  --cinza: #64748b;
+  --borda: #e2e8f0;
+  --sombra: 0 4px 16px rgba(30, 58, 138, 0.10);
+  --raio: 14px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+  line-height: 1.55;
+}
+
+/* ---------- Topo ---------- */
+.topo {
+  background: linear-gradient(120deg, var(--azul-900), var(--azul-600));
+  color: #fff;
+  padding: 0.9rem 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  box-shadow: var(--sombra);
+  position: sticky;
+  top: 0;
+  z-index: 500;
+}
+
+.topo__marca { display: flex; align-items: center; gap: 0.6rem; }
+.topo__marca img { width: 36px; height: 36px; }
+.topo__marca h1 { font-size: 1.15rem; letter-spacing: 0.3px; }
+.topo__usuario { font-size: 0.82rem; opacity: 0.9; text-align: right; }
+
+/* ---------- Estrutura ---------- */
+.conteudo {
+  max-width: 1050px;
+  margin: 1.4rem auto;
+  padding: 0 1rem;
+  display: grid;
+  gap: 1.2rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 1.5rem;
+  box-shadow: var(--sombra);
+}
+
+.card h2 {
+  font-size: 1.05rem;
+  margin-bottom: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--azul-900);
+}
+
+.subtitulo { font-size: 0.85rem; color: var(--cinza); margin-bottom: 0.8rem; }
+
+/* ---------- Formulários ---------- */
+label { display: block; font-size: 0.82rem; font-weight: 600; margin: 0.6rem 0 0.2rem; color: var(--azul-900); }
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1.5px solid var(--borda);
+  border-radius: 10px;
+  font: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--azul-600);
+  box-shadow: 0 0 0 3px var(--azul-100);
+}
+
+button {
+  margin-top: 0.9rem;
+  padding: 0.62rem 1.4rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--azul-600);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: transform 0.12s, background 0.15s;
+}
+
+button:hover { background: var(--azul-700); transform: translateY(-1px); }
+button:disabled { opacity: 0.6; cursor: wait; transform: none; }
+button.suave { background: var(--azul-50); color: var(--azul-700); border: 1.5px solid var(--azul-100); }
+button.mini { margin: 0; padding: 0.3rem 0.75rem; font-size: 0.78rem; }
+button.perigo { background: #fee2e2; color: var(--vermelho); border: 1.5px solid #fecaca; }
+
+/* ---------- Login ---------- */
+.login-palco {
+  min-height: calc(100vh - 62px);
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 15% 20%, var(--azul-100) 0, transparent 40%),
+    radial-gradient(circle at 85% 80%, #dcfce7 0, transparent 40%),
+    var(--fundo);
+  padding: 1.5rem 1rem;
+}
+
+.login-caixa { width: min(430px, 100%); }
+.login-caixa .card { padding: 2rem; }
+.login-logo { text-align: center; margin-bottom: 1rem; }
+.login-logo img { width: 74px; height: 74px; }
+.login-logo h1 { color: var(--azul-900); font-size: 1.5rem; }
+.login-logo p { color: var(--cinza); font-size: 0.88rem; }
+
+.abas { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+.abas button { flex: 1; margin: 0; background: var(--azul-50); color: var(--azul-700); }
+.abas button.ativa { background: var(--azul-600); color: #fff; }
+
+/* ---------- Listas ---------- */
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 0.2rem;
+  border-bottom: 1px dashed var(--borda);
+  flex-wrap: wrap;
+  font-size: 0.92rem;
+}
+
+.item:last-child { border-bottom: none; }
+
+.selo {
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.4px;
+}
+
+.selo.verde { background: var(--verde); }
+.selo.vermelho { background: var(--vermelho); }
+
+/* ---------- Mapa ---------- */
+.mapa-moldura {
+  height: 440px;
+  border-radius: var(--raio);
+  overflow: hidden;
+  border: 1px solid var(--borda);
+  margin-top: 0.8rem;
+}
+
+.legenda { display: flex; gap: 1.2rem; font-size: 0.82rem; color: var(--cinza); margin-top: 0.6rem; }
+.legenda span::before { content: "●"; margin-right: 0.3rem; }
+.legenda .verde::before { color: var(--verde); }
+.legenda .vermelho::before { color: var(--vermelho); }
+
+.ordem-lista { margin: 0.8rem 0 0 1.2rem; }
+.ordem-lista li { padding: 0.2rem 0; }
+
+.msg { font-size: 0.85rem; color: var(--azul-700); margin-top: 0.5rem; min-height: 1.1em; }
+.msg.erro { color: var(--vermelho); }
+
+/* ---------- Grade de 2 colunas no desktop ---------- */
+.duas-colunas { display: grid; gap: 1.2rem; grid-template-columns: 1fr 1fr; }
+
+@media (max-width: 780px) {
+  .duas-colunas { grid-template-columns: 1fr; }
+  .mapa-moldura { height: 330px; }
+  .topo__usuario { display: none; }
+}

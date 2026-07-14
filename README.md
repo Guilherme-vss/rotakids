@@ -38,9 +38,10 @@ com a ordem de coleta e linhas retas no mapa (degradação graciosa).
 
 | Camada | Tecnologia | Por quê |
 |--------|-----------|---------|
+| Front-end | **React 18 + Vite** (pasta `frontend/`) | O framework mais usado do mercado; componentes para pai e motorista |
 | Back-end | Node.js + **TypeScript** + Express | Tipagem forte + o ecossistema mais usado do mercado para APIs |
 | Banco | **PostgreSQL** | Relacionamentos claros (pais → alunos → vínculos → presenças) |
-| Mapa | Leaflet + OpenStreetMap | Grátis, sem chave de API |
+| Mapa | Leaflet + react-leaflet + OpenStreetMap | Grátis, sem chave de API |
 | Rotas/Geocoding | OSRM + Nominatim | APIs públicas do OpenStreetMap |
 | Autenticação | JWT + bcrypt | Padrão de mercado, senhas nunca em texto puro |
 | Testes | Jest + ts-jest | Testes do algoritmo de rota e geocoding |
@@ -54,23 +55,25 @@ docker compose up -d --build
 ```
 O PostgreSQL sobe junto e as tabelas são criadas automaticamente (`db/init.sql`).
 
-### Manualmente
+### Manualmente (desenvolvimento)
 ```bash
 # 1. suba um PostgreSQL e rode db/init.sql nele
 # 2. copie .env.example para .env e ajuste a DATABASE_URL
 npm install
-npm run dev
+npm run dev            # API em http://localhost:3000
+
+# em outro terminal — o front React com recarga automática:
+cd frontend
+npm install
+npm run dev            # http://localhost:5173 (proxy para a API)
 ```
 
 ## 🧪 Testes
 
 ```bash
-npm install
-npm test
+npm test               # back-end: rota, geocoding (Jest) — 14 testes
+cd frontend && npm test  # front-end: sessão, validação, cores do mapa (Vitest) — 8 testes
 ```
-Os testes cobrem o coração do sistema: Haversine, ordenação por vizinho mais
-próximo, distância total do trajeto, montagem das URLs do OSRM e do Nominatim
-e o parse das respostas.
 
 ## 🔌 API (resumo)
 
@@ -100,10 +103,10 @@ rotakids/
 │   └── services/
 │       ├── rota.ts           # Haversine + vizinho mais próximo + OSRM
 │       └── geocode.ts        # endereço → coordenadas (Nominatim)
-├── public/index.html         # interface (Leaflet) — pai e motorista
+├── frontend/                 # React 18 + Vite (Login, PainelPai, PainelMotorista, MapaVan)
 ├── db/init.sql               # esquema do banco
-├── tests/rota.test.ts        # testes unitários
-├── Dockerfile                # build em 2 etapas (imagem final enxuta)
+├── tests/rota.test.ts        # testes unitários do back
+├── Dockerfile                # build em 3 etapas (front + back + imagem final)
 ├── docker-compose.yml        # app + PostgreSQL
 └── Jenkinsfile               # CI: deps → testes → build → imagem
 ```
