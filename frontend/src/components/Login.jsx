@@ -41,7 +41,7 @@ export default function Login({ aoEntrar }) {
     <div className="login-palco">
       <div className="login-caixa">
         <div className="login-logo">
-          <img src="/icone.svg" alt="Logo do RotaKids" />
+          <img src="icone.svg" alt="Logo do RotaKids" />
           <h1>RotaKids</h1>
           <p>Sua van escolar, organizada.</p>
         </div>

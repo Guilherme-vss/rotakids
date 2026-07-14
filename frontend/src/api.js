@@ -54,7 +54,14 @@ export function limparSessao(storage = localStorage) {
 
 /* ---------- Chamadas à API ---------- */
 
+import { estaEmDemo, respostaDemo } from "./demo.js";
+
 export async function api(caminho, { metodo = "GET", corpo = null } = {}) {
+  // No GitHub Pages não há backend: a demo responde com dados fictícios
+  if (estaEmDemo()) {
+    return respostaDemo(caminho, metodo, corpo);
+  }
+
   const sessao = lerSessao();
   const resposta = await fetch("/api" + caminho, {
     method: metodo,

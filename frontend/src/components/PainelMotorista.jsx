@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, montarUrlMelhorRota } from "../api.js";
+import { estaEmDemo } from "../demo.js";
 import MapaVan from "./MapaVan.jsx";
 
 /**
@@ -30,29 +31,37 @@ export default function PainelMotorista() {
     }
   }
 
+  async function aplicarRota(lat, lng) {
+    try {
+      const r = await api(montarUrlMelhorRota(lat, lng).replace("/api", ""));
+      setRota({ ...r, origem: [lat, lng] });
+      setMsgRota(
+        r.paradas.length === 0
+          ? r.mensagem || "Nenhum aluno confirmado para hoje 🎉"
+          : r.tracado
+            ? `Rota de ${r.tracado.distanciaKm} km, cerca de ${r.tracado.duracaoMin} min. Boa viagem! 🚐`
+            : `Ordem calculada (~${r.distanciaEstimadaKm} km em linha reta).`
+      );
+    } catch (erro) {
+      setMsgRota(erro.message);
+    } finally {
+      setCalculando(false);
+    }
+  }
+
   function calcularRota() {
-    setMsgRota("Pegando sua localização...");
     setCalculando(true);
+
+    // Na demonstração não pedimos GPS: partimos de um ponto fixo em São Paulo
+    if (estaEmDemo()) {
+      setMsgRota("Calculando a partir do ponto de demonstração...");
+      aplicarRota(-23.558, -46.66);
+      return;
+    }
+
+    setMsgRota("Pegando sua localização...");
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const r = await api(
-            montarUrlMelhorRota(pos.coords.latitude, pos.coords.longitude).replace("/api", "")
-          );
-          setRota({ ...r, origem: [pos.coords.latitude, pos.coords.longitude] });
-          setMsgRota(
-            r.paradas.length === 0
-              ? r.mensagem || "Nenhum aluno confirmado para hoje 🎉"
-              : r.tracado
-                ? `Rota de ${r.tracado.distanciaKm} km, cerca de ${r.tracado.duracaoMin} min. Boa viagem! 🚐`
-                : `Ordem calculada (~${r.distanciaEstimadaKm} km em linha reta).`
-          );
-        } catch (erro) {
-          setMsgRota(erro.message);
-        } finally {
-          setCalculando(false);
-        }
-      },
+      (pos) => aplicarRota(pos.coords.latitude, pos.coords.longitude),
       () => {
         setMsgRota("Não consegui sua localização — libere o GPS no navegador.");
         setCalculando(false);

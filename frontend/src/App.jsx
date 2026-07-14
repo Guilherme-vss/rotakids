@@ -21,7 +21,7 @@ export default function App() {
     <>
       <header className="topo">
         <div className="topo__marca">
-          <img src="/icone.svg" alt="" />
+          <img src="icone.svg" alt="" />
           <h1>RotaKids</h1>
         </div>
         <div className="topo__usuario">
