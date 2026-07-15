@@ -14,7 +14,7 @@ router.use(exigirLogin, exigirTipo("pai"));
 
 /** POST /api/alunos — cadastra um filho no perfil do pai logado. */
 router.post("/", async (req, res) => {
-  const { nome, casaEndereco, escolaNome, escolaEndereco, problemaSaude, contatoEmergencia } =
+  const { nome, avatar, casaEndereco, escolaNome, escolaEndereco, problemaSaude, contatoEmergencia } =
     req.body ?? {};
 
   if (!nome || !casaEndereco || !escolaNome || !escolaEndereco) {
@@ -31,13 +31,13 @@ router.post("/", async (req, res) => {
 
   const resultado = await query(
     `INSERT INTO alunos
-       (pai_id, nome, casa_endereco, casa_lat, casa_lng,
+       (pai_id, nome, avatar, casa_endereco, casa_lat, casa_lng,
         escola_nome, escola_endereco, escola_lat, escola_lng,
         problema_saude, contato_emergencia)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
      RETURNING *`,
     [
-      req.usuario!.id, nome, casaEndereco, casa?.lat ?? null, casa?.lng ?? null,
+      req.usuario!.id, nome, avatar || "🧒", casaEndereco, casa?.lat ?? null, casa?.lng ?? null,
       escolaNome, escolaEndereco, escola?.lat ?? null, escola?.lng ?? null,
       problemaSaude ?? null, contatoEmergencia ?? null,
     ]

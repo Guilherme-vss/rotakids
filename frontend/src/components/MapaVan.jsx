@@ -3,12 +3,20 @@ import { GeoJSON, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } fro
 import L from "leaflet";
 import { corDoPonto } from "../api.js";
 
-/** Cria o pino colorido (verde = vai, vermelho = falta) usado no mapa. */
-function pinoColorido(cor) {
+/**
+ * Pino do aluno no mapa: o avatar da criança dentro de um balão
+ * verde (vai à escola) ou vermelho (falta) — as crianças AMAM se achar.
+ */
+function pinoColorido(cor, avatar) {
   return L.divIcon({
-    html: `<div style="width:18px;height:18px;border-radius:50%;background:${cor};border:3px solid #fff;box-shadow:0 0 5px rgba(0,0,0,.45)"></div>`,
+    html:
+      `<div style="width:34px;height:34px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);` +
+      `background:${cor};border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);` +
+      `display:flex;align-items:center;justify-content:center">` +
+      `<span style="transform:rotate(45deg);font-size:17px">${avatar || "🧒"}</span></div>`,
     className: "",
-    iconSize: [18, 18],
+    iconSize: [34, 34],
+    iconAnchor: [17, 30],
   });
 }
 
@@ -50,10 +58,10 @@ export default function MapaVan({ alunos, rota }) {
         <Marker
           key={aluno.id}
           position={[Number(aluno.casa_lat), Number(aluno.casa_lng)]}
-          icon={pinoColorido(corDoPonto(aluno.vai_hoje))}
+          icon={pinoColorido(corDoPonto(aluno.vai_hoje), aluno.avatar)}
         >
           <Popup>
-            <strong>{aluno.nome}</strong>
+            <strong>{aluno.avatar || "🧒"} {aluno.nome}</strong>
             <br />👤 Responsável: {aluno.responsavel} ({aluno.telefone_responsavel || "sem telefone"})
             {aluno.problema_saude && <><br />🏥 Saúde: {aluno.problema_saude}</>}
             {aluno.contato_emergencia && <><br />🆘 Emergência: {aluno.contato_emergencia}</>}

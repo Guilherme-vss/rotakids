@@ -179,6 +179,70 @@ button.perigo { background: #fee2e2; color: var(--vermelho); border: 1.5px solid
 .ordem-lista { margin: 0.8rem 0 0 1.2rem; }
 .ordem-lista li { padding: 0.2rem 0; }
 
+/* ---------- Resumo do dia (motorista) ---------- */
+.resumo-dia { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+
+.resumo-chip {
+  flex: 1;
+  min-width: 130px;
+  border-radius: 14px;
+  padding: 0.8rem;
+  text-align: center;
+}
+
+.resumo-chip strong { display: block; font-size: 1.7rem; }
+.resumo-chip span { font-size: 0.8rem; }
+.verde-fundo { background: #dcfce7; color: #14532d; }
+.vermelho-fundo { background: #fee2e2; color: #7f1d1d; }
+.azul-fundo { background: var(--azul-100); color: var(--azul-900); }
+
+.criancas-fila { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.9rem; }
+
+.crianca {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem 0.3rem 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 2px solid transparent;
+}
+
+.crianca em { font-style: normal; font-size: 1.25rem; }
+.crianca.vai { background: #dcfce7; border-color: var(--verde); color: #14532d; }
+.crianca.falta { background: #fee2e2; border-color: var(--vermelho); color: #7f1d1d; }
+
+/* ---------- Avatares (cadastro do filho) ---------- */
+.avatares { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
+.avatar-opcao {
+  margin: 0;
+  padding: 0.3rem;
+  width: 44px;
+  height: 44px;
+  font-size: 1.4rem;
+  background: var(--azul-50);
+  border: 2px solid var(--borda);
+  border-radius: 12px;
+  line-height: 1;
+}
+
+.avatar-opcao:hover { transform: scale(1.12); background: var(--azul-100); }
+.avatar-opcao.escolhido { border-color: var(--azul-600); background: var(--azul-100); box-shadow: 0 0 0 3px var(--azul-100); }
+
+.filho-nome { display: flex; align-items: center; gap: 0.5rem; }
+.filho-avatar { font-style: normal; font-size: 1.7rem; }
+
+.acesso-livre {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  background: var(--azul-50);
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  color: var(--azul-700);
+}
+
 .msg { font-size: 0.85rem; color: var(--azul-700); margin-top: 0.5rem; min-height: 1.1em; }
 .msg.erro { color: var(--vermelho); }
 

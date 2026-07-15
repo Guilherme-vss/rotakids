@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS alunos (
     id                 SERIAL PRIMARY KEY,
     pai_id             INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
     nome               VARCHAR(120) NOT NULL,
+    avatar             VARCHAR(8) DEFAULT '🧒',  -- emoji escolhido pela criança
+
     casa_endereco      TEXT NOT NULL,
     casa_lat           DOUBLE PRECISION,
     casa_lng           DOUBLE PRECISION,

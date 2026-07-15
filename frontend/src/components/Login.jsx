@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api, salvarSessao, validarCadastro } from "../api.js";
+import { usarMotorLocal } from "../demo.js";
 
 /** Tela de entrada: login ou criação de conta (pai ou motorista). */
 export default function Login({ aoEntrar }) {
@@ -44,6 +45,9 @@ export default function Login({ aoEntrar }) {
           <img src="icone.svg" alt="Logo do RotaKids" />
           <h1>RotaKids</h1>
           <p>Sua van escolar, organizada.</p>
+          {usarMotorLocal() && (
+            <p className="acesso-livre">🔓 Versão web: entre com qualquer email e senha para explorar.</p>
+          )}
         </div>
 
         <form className="card" onSubmit={enviar}>

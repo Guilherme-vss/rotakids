@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, montarUrlMelhorRota } from "../api.js";
-import { estaEmDemo } from "../demo.js";
+import { usarMotorLocal } from "../demo.js";
 import MapaVan from "./MapaVan.jsx";
 
 /**
@@ -52,9 +52,9 @@ export default function PainelMotorista() {
   function calcularRota() {
     setCalculando(true);
 
-    // Na demonstração não pedimos GPS: partimos de um ponto fixo em São Paulo
-    if (estaEmDemo()) {
-      setMsgRota("Calculando a partir do ponto de demonstração...");
+    // Na versão web não pedimos GPS: partimos da garagem da van
+    if (usarMotorLocal()) {
+      setMsgRota("Calculando a partir da garagem da van...");
       aplicarRota(-23.558, -46.66);
       return;
     }
@@ -69,8 +69,42 @@ export default function PainelMotorista() {
     );
   }
 
+  const confirmados = alunos.filter((a) => a.vai_hoje);
+  const faltas = alunos.filter((a) => !a.vai_hoje);
+
   return (
     <>
+      <section className="card">
+        <h2>🌞 Resumo de hoje</h2>
+        <div className="resumo-dia">
+          <div className="resumo-chip verde-fundo">
+            <strong>{confirmados.length}</strong>
+            <span>vão à escola 🟢</span>
+          </div>
+          <div className="resumo-chip vermelho-fundo">
+            <strong>{faltas.length}</strong>
+            <span>faltam hoje 🔴</span>
+          </div>
+          <div className="resumo-chip azul-fundo">
+            <strong>{alunos.length}</strong>
+            <span>crianças na van 🚐</span>
+          </div>
+        </div>
+        <div className="criancas-fila">
+          {alunos.map((aluno) => (
+            <span
+              key={aluno.id}
+              className={`crianca ${aluno.vai_hoje ? "vai" : "falta"}`}
+              title={aluno.vai_hoje ? `${aluno.nome} vai hoje` : `${aluno.nome}: ${aluno.justificativa || "falta"}`}
+            >
+              <em>{aluno.avatar || "🧒"}</em>
+              {aluno.nome.split(" ")[0]}
+            </span>
+          ))}
+          {alunos.length === 0 && <em className="subtitulo">Vincule seus primeiros alunos abaixo. 👇</em>}
+        </div>
+      </section>
+
       <section className="card">
         <h2>➕ Vincular aluno</h2>
         <p className="subtitulo">

@@ -54,12 +54,13 @@ export function limparSessao(storage = localStorage) {
 
 /* ---------- Chamadas à API ---------- */
 
-import { estaEmDemo, respostaDemo } from "./demo.js";
+import { motorLocal, usarMotorLocal } from "./demo.js";
 
 export async function api(caminho, { metodo = "GET", corpo = null } = {}) {
-  // No GitHub Pages não há backend: a demo responde com dados fictícios
-  if (estaEmDemo()) {
-    return respostaDemo(caminho, metodo, corpo);
+  // Sem servidor (ex.: GitHub Pages), o motor local assume — os dados
+  // ficam salvos no próprio navegador e tudo continua funcionando.
+  if (usarMotorLocal()) {
+    return motorLocal(caminho, metodo, corpo);
   }
 
   const sessao = lerSessao();

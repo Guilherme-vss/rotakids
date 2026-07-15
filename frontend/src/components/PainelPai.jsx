@@ -9,9 +9,12 @@ export default function PainelPai() {
   const [filhos, setFilhos] = useState([]);
   const [pendentes, setPendentes] = useState([]);
   const [form, setForm] = useState({
-    nome: "", casaEndereco: "", escolaNome: "", escolaEndereco: "",
+    nome: "", avatar: "🧒", casaEndereco: "", escolaNome: "", escolaEndereco: "",
     problemaSaude: "", contatoEmergencia: "",
   });
+
+  // Avatares para a criança escolher — parte da diversão de "entrar pra van"
+  const avatares = ["🧒", "👧", "🦄", "🦖", "🚀", "⚽", "🐱", "🐶", "🦁", "🌸", "🎮", "🎨"];
   const [msg, setMsg] = useState("");
   const [salvando, setSalvando] = useState(false);
 
@@ -41,7 +44,7 @@ export default function PainelPai() {
     try {
       const r = await api("/alunos", { metodo: "POST", corpo: form });
       setMsg(r.aviso || "Aluno cadastrado! ✅");
-      setForm({ nome: "", casaEndereco: "", escolaNome: "", escolaEndereco: "", problemaSaude: "", contatoEmergencia: "" });
+      setForm({ nome: "", avatar: "🧒", casaEndereco: "", escolaNome: "", escolaEndereco: "", problemaSaude: "", contatoEmergencia: "" });
       recarregar();
     } catch (erro) {
       setMsg(erro.message);
@@ -73,6 +76,20 @@ export default function PainelPai() {
           <form onSubmit={cadastrarFilho}>
             <label>Nome do aluno</label>
             <input {...campo("nome", "João da Silva")} />
+
+            <label>Escolha o avatar (deixe a criança escolher! 🎉)</label>
+            <div className="avatares">
+              {avatares.map((emoji) => (
+                <button
+                  type="button"
+                  key={emoji}
+                  className={`avatar-opcao ${form.avatar === emoji ? "escolhido" : ""}`}
+                  onClick={() => setForm({ ...form, avatar: emoji })}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
             <label>Endereço da casa</label>
             <input {...campo("casaEndereco", "Rua, número, cidade")} />
             <label>Nome da escola</label>
@@ -97,10 +114,13 @@ export default function PainelPai() {
           {filhos.length === 0 && <em>Nenhum filho cadastrado ainda.</em>}
           {filhos.map((filho) => (
             <div className="item" key={filho.id}>
-              <span>
-                <strong>{filho.nome}</strong>
-                <br />
-                <small>{filho.escola_nome}</small>
+              <span className="filho-nome">
+                <em className="filho-avatar">{filho.avatar || "🧒"}</em>
+                <span>
+                  <strong>{filho.nome}</strong>
+                  <br />
+                  <small>{filho.escola_nome}</small>
+                </span>
               </span>
               <span className={`selo ${filho.vai_hoje ? "verde" : "vermelho"}`}>
                 {filho.vai_hoje ? "VAI HOJE" : "FALTA"}
