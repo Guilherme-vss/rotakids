@@ -171,13 +171,67 @@ button.perigo { background: #fee2e2; color: var(--vermelho); border: 1.5px solid
   margin-top: 0.8rem;
 }
 
-.legenda { display: flex; gap: 1.2rem; font-size: 0.82rem; color: var(--cinza); margin-top: 0.6rem; }
+.legenda { display: flex; gap: 1.2rem; font-size: 0.82rem; color: var(--cinza); margin-top: 0.6rem; flex-wrap: wrap; }
 .legenda span::before { content: "●"; margin-right: 0.3rem; }
 .legenda .verde::before { color: var(--verde); }
 .legenda .vermelho::before { color: var(--vermelho); }
+.legenda .azul::before { color: var(--azul-600); }
 
 .ordem-lista { margin: 0.8rem 0 0 1.2rem; }
 .ordem-lista li { padding: 0.2rem 0; }
+.ordem-lista li.feita { opacity: 0.55; text-decoration: line-through; }
+
+/* ---------- Opções de caminho (o tio escolhe pelo tempo) ---------- */
+.alternativas { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.6rem; }
+
+.alternativa {
+  margin: 0;
+  flex: 1;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
+  background: var(--azul-50);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+  text-align: left;
+}
+
+.alternativa span { font-size: 0.82rem; color: var(--cinza); font-weight: 600; }
+.alternativa strong { color: var(--azul-700); }
+.alternativa.escolhida { border-color: var(--azul-600); background: var(--azul-100); box-shadow: 0 0 0 3px var(--azul-100); }
+
+/* ---------- Trajeto em andamento ---------- */
+button.iniciar { background: var(--verde); font-size: 1rem; }
+button.iniciar:hover { background: #15803d; }
+
+.trajeto-caixa {
+  margin-top: 0.9rem;
+  background: var(--azul-50);
+  border: 2px solid var(--azul-100);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+.trajeto-caixa.concluido {
+  background: #dcfce7;
+  border-color: var(--verde);
+  font-size: 1rem;
+}
+
+.trajeto-proxima { display: flex; align-items: center; gap: 0.8rem; }
+.trajeto-avatar { font-size: 2.4rem; }
+.trajeto-proxima small { display: block; color: var(--cinza); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.trajeto-proxima strong { font-size: 1.15rem; color: var(--azul-900); }
+
+button.pegar { background: var(--verde); font-size: 1rem; width: 100%; }
+button.pegar:hover { background: #15803d; }
+
+.crianca.navan { background: var(--azul-100); border-color: var(--azul-600); color: var(--azul-900); }
 
 /* ---------- Resumo do dia (motorista) ---------- */
 .resumo-dia { display: flex; gap: 0.8rem; flex-wrap: wrap; }

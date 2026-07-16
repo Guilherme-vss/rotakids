@@ -5,7 +5,7 @@ import { corDoPonto } from "../api.js";
 
 /**
  * Pino do aluno no mapa: o avatar da criança dentro de um balão
- * verde (vai à escola) ou vermelho (falta) — as crianças AMAM se achar.
+ * verde (vai), vermelho (falta) ou azul (já embarcou na van).
  */
 function pinoColorido(cor, avatar) {
   return L.divIcon({
@@ -17,6 +17,18 @@ function pinoColorido(cor, avatar) {
     className: "",
     iconSize: [34, 34],
     iconAnchor: [17, 30],
+  });
+}
+
+/** Pino da escola (destino final). */
+function pinoEscola() {
+  return L.divIcon({
+    html:
+      `<div style="width:36px;height:36px;border-radius:10px;background:#7c3aed;border:3px solid #fff;` +
+      `box-shadow:0 2px 6px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:19px">🏫</div>`,
+    className: "",
+    iconSize: [36, 36],
+    iconAnchor: [18, 32],
   });
 }
 
@@ -32,16 +44,16 @@ function Enquadrar({ pontos }) {
 }
 
 /**
- * O mapa da van: alunos como pontos coloridos + traçado da rota.
- * Recebe os dados prontos; toda a lógica fica nos painéis.
+ * O mapa da van: alunos como pinos coloridos + a rota escolhida
+ * seguindo as RUAS (GeoJSON do OSRM). A linha reta tracejada só
+ * aparece como reserva se o serviço de mapas estiver fora do ar.
  */
-export default function MapaVan({ alunos, rota }) {
+export default function MapaVan({ alunos, rota, pegos = [], geometria = null }) {
   const comCasa = alunos.filter((a) => a.casa_lat != null);
   const pontos = comCasa.map((a) => [Number(a.casa_lat), Number(a.casa_lng)]);
 
-  // Linha reta de reserva quando o OSRM não devolve o traçado rua a rua
   const linhaReserva =
-    rota && !rota.tracado && rota.paradas?.length > 0
+    rota && !geometria && rota.paradas?.length > 0
       ? [rota.origem, ...rota.paradas.map((p) => [p.lat, p.lng]),
          ...(rota.escola ? [[rota.escola.lat, rota.escola.lng]] : [])]
       : null;
@@ -56,12 +68,13 @@ export default function MapaVan({ alunos, rota }) {
 
       {comCasa.map((aluno) => (
         <Marker
-          key={aluno.id}
+          key={`${aluno.id}-${pegos.includes(aluno.id)}`}
           position={[Number(aluno.casa_lat), Number(aluno.casa_lng)]}
-          icon={pinoColorido(corDoPonto(aluno.vai_hoje), aluno.avatar)}
+          icon={pinoColorido(corDoPonto(aluno.vai_hoje, pegos.includes(aluno.id)), aluno.avatar)}
         >
           <Popup>
             <strong>{aluno.avatar || "🧒"} {aluno.nome}</strong>
+            {pegos.includes(aluno.id) && <><br />🔵 <strong>Já está na van!</strong></>}
             <br />👤 Responsável: {aluno.responsavel} ({aluno.telefone_responsavel || "sem telefone"})
             {aluno.problema_saude && <><br />🏥 Saúde: {aluno.problema_saude}</>}
             {aluno.contato_emergencia && <><br />🆘 Emergência: {aluno.contato_emergencia}</>}
@@ -76,11 +89,18 @@ export default function MapaVan({ alunos, rota }) {
         </Marker>
       ))}
 
-      {rota?.tracado?.geometria && (
+      {rota?.escola && (
+        <Marker position={[rota.escola.lat, rota.escola.lng]} icon={pinoEscola()}>
+          <Popup><strong>🏫 {rota.escola.nome}</strong><br />Destino final da rota.</Popup>
+        </Marker>
+      )}
+
+      {/* Rota escolhida, seguindo as ruas (OSRM) */}
+      {geometria && (
         <GeoJSON
-          key={JSON.stringify(rota.paradas.map((p) => p.alunoId))}
-          data={rota.tracado.geometria}
-          style={{ color: "#2563eb", weight: 5 }}
+          key={JSON.stringify(geometria.coordinates?.[0] ?? geometria)}
+          data={geometria}
+          style={{ color: "#2563eb", weight: 5, opacity: 0.85 }}
         />
       )}
 
