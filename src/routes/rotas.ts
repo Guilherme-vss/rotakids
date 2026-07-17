@@ -15,10 +15,13 @@ router.use(exigirLogin, exigirTipo("motorista"));
 /** Alunos com contrato fechado (aceito pelos dois lados) e a presença de hoje. */
 async function alunosDoMotorista(motoristaId: number) {
   const resultado = await query(
-    `SELECT a.id, a.nome, a.avatar, a.casa_endereco, a.casa_lat, a.casa_lng,
+    `SELECT a.id, a.nome, a.avatar, a.nascimento,
+            a.casa_endereco, a.casa_lat, a.casa_lng,
             a.escola_nome, a.escola_lat, a.escola_lng,
-            a.problema_saude, a.contato_emergencia,
-            u.nome AS responsavel, u.telefone AS telefone_responsavel,
+            a.problema_saude, a.autorizado_descer_sozinho,
+            a.responsavel_nome, a.responsavel_celular,
+            a.emergencia_nome, a.emergencia_celular,
+            u.nome AS responsavel, u.celular AS telefone_responsavel,
             COALESCE(p.vai, TRUE) AS vai_hoje,
             p.justificativa
        FROM vinculos v

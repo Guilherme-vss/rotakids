@@ -47,10 +47,16 @@ router.post("/", exigirTipo("motorista"), async (req, res) => {
 /** GET /api/vinculos/pendentes — pai vê solicitações aguardando resposta. */
 router.get("/pendentes", exigirTipo("pai"), async (req, res) => {
   const resultado = await query(
-    `SELECT v.id, a.nome AS aluno, u.nome AS motorista, u.telefone
+    // O pai decide com informação na mão: quem é o motorista, a van dele e a CNH.
+    `SELECT v.id, a.nome AS aluno,
+            u.nome AS motorista, u.celular AS telefone,
+            m.cnh_categoria, m.cnh_validade,
+            ve.placa, ve.modelo, ve.ano, ve.lugares
        FROM vinculos v
-       JOIN alunos a   ON a.id = v.aluno_id
-       JOIN usuarios u ON u.id = v.motorista_id
+       JOIN alunos a      ON a.id = v.aluno_id
+       JOIN usuarios u    ON u.id = v.motorista_id
+       LEFT JOIN motoristas m ON m.usuario_id = u.id
+       LEFT JOIN veiculos ve  ON ve.motorista_id = u.id AND ve.ativo
       WHERE a.pai_id = $1 AND v.aceito_pai = FALSE`,
     [req.usuario!.id]
   );

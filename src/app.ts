@@ -7,6 +7,7 @@ import authRouter from "./routes/auth";
 import alunosRouter from "./routes/alunos";
 import vinculosRouter from "./routes/vinculos";
 import rotasRouter from "./routes/rotas";
+import trajetoRouter from "./routes/trajeto";
 
 export function criarApp() {
   const app = express();
@@ -20,6 +21,7 @@ export function criarApp() {
   app.use("/api/alunos", alunosRouter);
   app.use("/api/vinculos", vinculosRouter);
   app.use("/api/rota", rotasRouter);
+  app.use("/api/trajeto", trajetoRouter);
 
   return app;
 }
