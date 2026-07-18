@@ -106,11 +106,12 @@ export function limparSessao(storage = localStorage) {
 
 /* ---------- Chamadas à API ---------- */
 
-import { motorLocal, usarMotorLocal } from "./demo.js";
+import { motorLocal, usarMotorLocal } from "./motor-local.js";
 
 export async function api(caminho, { metodo = "GET", corpo = null } = {}) {
   // Sem servidor (ex.: GitHub Pages), o motor local assume — os dados
   // ficam salvos no próprio navegador e tudo continua funcionando.
+  // Ele roda o MESMO domínio do servidor (src/domain/*), não uma cópia.
   if (usarMotorLocal()) {
     return motorLocal(caminho, metodo, corpo);
   }
@@ -125,6 +126,12 @@ export async function api(caminho, { metodo = "GET", corpo = null } = {}) {
     body: corpo ? JSON.stringify(corpo) : null,
   });
   const dados = await resposta.json().catch(() => ({}));
-  if (!resposta.ok) throw new Error(dados.erro || "Erro inesperado — tente de novo");
+  if (!resposta.ok) {
+    // O servidor pode devolver `erros` (campo → mensagem) num cadastro.
+    // Carregamos isso no erro para a tela destacar campo por campo.
+    const erro = new Error(dados.erro || "Confira os campos destacados");
+    if (dados.erros) erro.erros = dados.erros;
+    throw erro;
+  }
   return dados;
 }

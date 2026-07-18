@@ -1,218 +1,288 @@
 import { useEffect, useState } from "react";
 import { api, buscarRotasDeCarro } from "../api.js";
-import { usarMotorLocal } from "../demo.js";
+import { usarMotorLocal, GARAGEM } from "../motor-local.js";
 import MapaVan from "./MapaVan.jsx";
 
 /**
- * Painel do motorista — o dia completo do tio da van:
- * 1. Vê o resumo (quem vai 🟢, quem falta 🔴)
- * 2. Calcula a rota → recebe OPÇÕES de caminho pelas ruas (OSRM) com o
- *    tempo de cada uma, e escolhe a que preferir
- * 3. ▶️ Inicia o trajeto: a cada parada marca "peguei" e o ponto da
- *    criança fica azul 🔵 no mapa, até chegar na escola 🏫
+ * Painel do motorista — o dia inteiro numa tela só.
+ *
+ * O fluxo real do tio da van:
+ *   IDA      buscar criança por criança          🟢 → 🔵
+ *   CHAMADA  na escola: quem volta de van hoje?
+ *   VOLTA    deixar criança por criança          🔴 → 🟢
+ *
+ * Decisão de usabilidade: o motorista está DIRIGINDO. A tela mostra UMA ação
+ * grande por vez (a próxima parada), não uma lista onde ele precisa caçar o
+ * nome certo. Tudo que não é "o que eu faço agora" fica secundário.
  */
 export default function PainelMotorista() {
-  const [alunos, setAlunos] = useState([]);
-  const [rota, setRota] = useState(null);          // ordem de coleta + escola
+  const [estado, setEstado] = useState(null);
   const [alternativas, setAlternativas] = useState([]);
-  const [escolhida, setEscolhida] = useState(0);   // índice da alternativa escolhida
-  const [emTrajeto, setEmTrajeto] = useState(false);
-  const [pegos, setPegos] = useState([]);          // ids já embarcados
-  const [vinculo, setVinculo] = useState({ emailPai: "", nomeAluno: "" });
-  const [msgVinculo, setMsgVinculo] = useState("");
-  const [msgRota, setMsgRota] = useState("");
-  const [calculando, setCalculando] = useState(false);
-  const [concluido, setConcluido] = useState(false);
+  const [escolhida, setEscolhida] = useState(0);
+  const [msg, setMsg] = useState("");
+  const [erro, setErro] = useState("");
+  const [ocupado, setOcupado] = useState(false);
 
   useEffect(() => {
-    api("/rota/alunos").then(setAlunos).catch(() => {});
+    api("/trajeto/hoje").then(setEstado).catch(() => {});
   }, []);
 
-  async function solicitarVinculo(e) {
-    e.preventDefault();
-    setMsgVinculo("");
+  /** Toda ação passa por aqui: chama a API, atualiza o estado, traduz o erro. */
+  async function acao(caminho, corpo = null, metodo = "POST") {
+    setErro("");
+    setOcupado(true);
     try {
-      const r = await api("/vinculos", { metodo: "POST", corpo: vinculo });
-      setMsgVinculo(r.mensagem);
-      setVinculo({ emailPai: "", nomeAluno: "" });
-    } catch (erro) {
-      setMsgVinculo(erro.message);
-    }
-  }
-
-  /** Passo 1: ordem de coleta + rotas de carro alternativas. */
-  async function aplicarRota(lat, lng) {
-    try {
-      const r = await api(`/rota/melhor?lat=${lat}&lng=${lng}`);
-      const novaRota = { ...r, origem: [lat, lng] };
-      setRota(novaRota);
-      setPegos([]);
-      setEmTrajeto(false);
-      setConcluido(false);
-
-      if (r.paradas.length === 0) {
-        setAlternativas([]);
-        setMsgRota(r.mensagem || "Nenhum aluno confirmado para hoje 🎉");
-        return;
-      }
-
-      // Rotas PELAS RUAS, com alternativas, direto do OSRM (OpenStreetMap)
-      setMsgRota("Traçando os caminhos pelas ruas...");
-      const pontos = [
-        [lat, lng],
-        ...r.paradas.map((p) => [p.lat, p.lng]),
-        ...(r.escola ? [[r.escola.lat, r.escola.lng]] : []),
-      ];
-      const opcoes = await buscarRotasDeCarro(pontos);
-      setAlternativas(opcoes);
-      setEscolhida(0);
-      setMsgRota(
-        opcoes.length > 1
-          ? `Encontrei ${opcoes.length} caminhos — escolha o seu e inicie o trajeto! 👇`
-          : opcoes.length === 1
-            ? "Caminho traçado pelas ruas — pode iniciar o trajeto! 👇"
-            : "O serviço de mapas está fora do ar — seguindo com a linha guia."
-      );
-    } catch (erro) {
-      setMsgRota(erro.message);
+      const novo = await api(caminho, { metodo, corpo });
+      setEstado(novo);
+      return novo;
+    } catch (e) {
+      // Erro de regra (409) é orientação, não falha: "ainda falta buscar o Bruno"
+      setErro(e.message);
+      return null;
     } finally {
-      setCalculando(false);
+      setOcupado(false);
     }
   }
 
-  function calcularRota() {
-    setCalculando(true);
+  const posicaoVan = () => (usarMotorLocal() ? GARAGEM : { lat: -23.558, lng: -46.66 });
 
-    // Na versão web não pedimos GPS: partimos da garagem da van
-    if (usarMotorLocal()) {
-      setMsgRota("Calculando a partir da garagem da van...");
-      aplicarRota(-23.558, -46.66);
+  /** Traça o caminho pelas ruas para a fase atual (OSRM, com alternativas). */
+  async function tracarRota(atual) {
+    const alvo = atual ?? estado;
+    if (!alvo?.alunos?.length) return;
+
+    const van = posicaoVan();
+    const pendentes = alvo.alunos.filter((a) =>
+      alvo.fase === "ida" ? a.status === "vai" : a.status === "voltando"
+    );
+    if (pendentes.length === 0) {
+      setAlternativas([]);
       return;
     }
 
-    setMsgRota("Pegando sua localização...");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => aplicarRota(pos.coords.latitude, pos.coords.longitude),
-      () => {
-        setMsgRota("Não consegui sua localização — libere o GPS no navegador.");
-        setCalculando(false);
-      }
+    const pontos = [
+      [van.lat, van.lng],
+      ...pendentes.map((a) => [a.lat, a.lng]),
+      ...(alvo.fase === "ida" ? [[alvo.escola.lat, alvo.escola.lng]] : []),
+    ];
+    setMsg("Traçando o caminho pelas ruas...");
+    const opcoes = await buscarRotasDeCarro(pontos);
+    setAlternativas(opcoes);
+    setEscolhida(0);
+    setMsg(
+      opcoes.length > 1
+        ? `${opcoes.length} caminhos possíveis — escolha o seu 👇`
+        : opcoes.length === 1
+          ? "Caminho traçado pelas ruas 👇"
+          : "O serviço de mapas está fora do ar — seguindo com a linha guia."
     );
   }
 
-  /** Passo 2: o trajeto em si. */
-  const proximaParada = rota?.paradas?.find((p) => !pegos.includes(p.alunoId)) ?? null;
-  const totalParadas = rota?.paradas?.length ?? 0;
-
-  function iniciarTrajeto() {
-    setEmTrajeto(true);
-    setConcluido(false);
-    setMsgRota("");
+  async function iniciar() {
+    const novo = await acao("/trajeto/iniciar");
+    if (novo) tracarRota(novo);
   }
 
-  function marcarPego(parada) {
-    setPegos((atuais) => [...atuais, parada.alunoId]);
+  async function embarcar(aluno) {
+    const novo = await acao(`/trajeto/embarcar/${aluno.alunoId}`);
+    if (novo) tracarRota(novo);
   }
 
-  function finalizarTrajeto() {
-    setConcluido(true);
-    setEmTrajeto(false);
+  async function entregar(aluno) {
+    const novo = await acao(`/trajeto/entregar/${aluno.alunoId}`);
+    if (novo) tracarRota(novo);
   }
 
-  function cancelarTrajeto() {
-    setEmTrajeto(false);
-    setPegos([]);
+  async function chamada(aluno, presente) {
+    await acao(`/trajeto/chamada/${aluno.alunoId}`, { presente });
   }
 
-  const confirmados = alunos.filter((a) => a.vai_hoje);
-  const faltas = alunos.filter((a) => !a.vai_hoje);
+  async function iniciarVolta() {
+    const novo = await acao("/trajeto/iniciar-volta");
+    if (novo) tracarRota(novo);
+  }
+
+  async function reiniciar() {
+    await api("/trajeto/reiniciar", { metodo: "POST" }).catch(() => {});
+    const novo = await api("/trajeto/hoje");
+    setEstado(novo);
+    setAlternativas([]);
+  }
+
+  /* ---------- Telas por fase ---------- */
+
+  if (!estado) return <section className="card"><em>Carregando o dia...</em></section>;
+
+  if (!estado.iniciado) {
+    return (
+      <section className="card centro">
+        <h2>🌅 Bom dia, tio!</h2>
+        <p className="subtitulo">
+          Vamos começar? Eu monto a rota com quem confirmou presença hoje e deixo
+          quem faltou fora do caminho — você não perde viagem.
+        </p>
+        <button className="grande" onClick={iniciar} disabled={ocupado}>
+          {ocupado ? "Montando..." : "▶️ Iniciar o dia"}
+        </button>
+        <p className="msg erro">{erro}</p>
+      </section>
+    );
+  }
+
+  const proxima = estado.proximaParada;
+  const naVan = estado.alunos.filter((a) => ["na_van", "voltando"].includes(a.status)).length;
 
   return (
     <>
+      {/* ---- Faixa de situação ---- */}
       <section className="card">
-        <h2>🌞 Resumo de hoje</h2>
-        <div className="resumo-dia">
-          <div className="resumo-chip verde-fundo">
-            <strong>{confirmados.length}</strong>
-            <span>vão à escola 🟢</span>
-          </div>
-          <div className="resumo-chip vermelho-fundo">
-            <strong>{faltas.length}</strong>
-            <span>faltam hoje 🔴</span>
-          </div>
-          <div className="resumo-chip azul-fundo">
-            <strong>{pegos.length}</strong>
-            <span>já na van 🔵</span>
-          </div>
-        </div>
-        <div className="criancas-fila">
-          {alunos.map((aluno) => (
-            <span
-              key={aluno.id}
-              className={`crianca ${pegos.includes(aluno.id) ? "navan" : aluno.vai_hoje ? "vai" : "falta"}`}
-              title={
-                pegos.includes(aluno.id)
-                  ? `${aluno.nome} já está na van`
-                  : aluno.vai_hoje
-                    ? `${aluno.nome} vai hoje`
-                    : `${aluno.nome}: ${aluno.justificativa || "falta"}`
-              }
-            >
-              <em>{aluno.avatar || "🧒"}</em>
-              {aluno.nome.split(" ")[0]}
+        <div className="fase-faixa">
+          {[
+            { id: "ida", rotulo: "🚐 Buscando" },
+            { id: "chamada", rotulo: "📋 Chamada" },
+            { id: "volta", rotulo: "🏠 Levando" },
+            { id: "encerrado", rotulo: "✅ Fim" },
+          ].map((f) => (
+            <span key={f.id} className={`fase-item ${estado.fase === f.id ? "atual" : ""}`}>
+              {f.rotulo}
             </span>
           ))}
-          {alunos.length === 0 && <em className="subtitulo">Vincule seus primeiros alunos abaixo. 👇</em>}
         </div>
+        <div className="progresso"><div style={{ width: `${estado.progresso}%` }} /></div>
+        <small className="subtitulo">
+          {estado.progresso}% da fase · {naVan} criança(s) na van agora
+        </small>
       </section>
 
-      <section className="card">
-        <h2>➕ Vincular aluno</h2>
-        <p className="subtitulo">
-          Peça o vínculo pelo email do responsável. O endereço da casa só aparece
-          depois que a família aceitar — privacidade em primeiro lugar.
-        </p>
-        <form onSubmit={solicitarVinculo} className="duas-colunas">
-          <div>
-            <label>Email do responsável</label>
-            <input
-              value={vinculo.emailPai}
-              onChange={(e) => setVinculo({ ...vinculo, emailPai: e.target.value })}
-              placeholder="mae@email.com"
-            />
+      {/* ---- A AÇÃO DE AGORA (o que o motorista realmente olha) ---- */}
+      {estado.fase === "ida" && proxima && (
+        <section className="card acao-agora">
+          <small>Próxima parada · {estado.alunos.filter((a) => a.status === "vai").length} restante(s)</small>
+          <div className="acao-agora__aluno">
+            <span className="acao-agora__avatar">{proxima.avatar}</span>
+            <div>
+              <strong>{proxima.nome}</strong>
+              <p className="subtitulo">Buscar em casa</p>
+            </div>
           </div>
-          <div>
-            <label>Nome do aluno</label>
-            <input
-              value={vinculo.nomeAluno}
-              onChange={(e) => setVinculo({ ...vinculo, nomeAluno: e.target.value })}
-              placeholder="João da Silva"
-            />
-          </div>
-          <div>
-            <button>Solicitar vínculo</button>
-          </div>
-        </form>
-        <p className="msg">{msgVinculo}</p>
-      </section>
-
-      <section className="card">
-        <h2>🗺️ Rota do dia</h2>
-        <div className="legenda">
-          <span className="verde">vai à escola</span>
-          <span className="vermelho">falta (clique no ponto para ver o motivo)</span>
-          <span className="azul">já na van</span>
-        </div>
-
-        {!emTrajeto && (
-          <button onClick={calcularRota} disabled={calculando}>
-            {calculando ? "Calculando..." : "📍 Calcular rota a partir da minha posição"}
+          <button className="grande verde" onClick={() => embarcar(proxima)} disabled={ocupado}>
+            ✅ Peguei {proxima.nome.split(" ")[0]}
           </button>
-        )}
-        <p className="msg">{msgRota}</p>
+        </section>
+      )}
 
-        {/* Opções de caminho: o tio olha o tempo e escolhe */}
-        {!emTrajeto && alternativas.length > 0 && (
+      {estado.fase === "ida" && !proxima && (
+        <section className="card acao-agora">
+          <div className="acao-agora__aluno">
+            <span className="acao-agora__avatar">🏫</span>
+            <div>
+              <strong>Todos a bordo!</strong>
+              <p className="subtitulo">Rumo à {estado.escola.nome}</p>
+            </div>
+          </div>
+          <button className="grande" onClick={() => acao("/trajeto/concluir-ida")} disabled={ocupado}>
+            🏫 Cheguei na escola
+          </button>
+        </section>
+      )}
+
+      {/* ---- CHAMADA ---- */}
+      {estado.fase === "chamada" && (
+        <section className="card">
+          <h2>📋 Chamada na escola</h2>
+          <p className="subtitulo">
+            Quem volta de van hoje? Marque criança por criança — se o pai já buscou,
+            é só dizer que ela não volta. <strong>Só saímos com a chamada completa.</strong>
+          </p>
+
+          {estado.alunos
+            .filter((a) => ["na_escola", "voltando", "volta_ausente"].includes(a.status))
+            .map((aluno) => (
+              <div className="chamada-linha" key={aluno.alunoId}>
+                <span className="chamada-aluno">
+                  <em>{aluno.avatar}</em> {aluno.nome}
+                </span>
+                <span className="chamada-botoes">
+                  <button
+                    className={`mini ${aluno.status === "voltando" ? "verde" : "suave"}`}
+                    onClick={() => chamada(aluno, true)}
+                    disabled={ocupado}
+                  >
+                    🚐 Volta
+                  </button>
+                  <button
+                    className={`mini ${aluno.status === "volta_ausente" ? "cinza-forte" : "suave"}`}
+                    onClick={() => chamada(aluno, false)}
+                    disabled={ocupado}
+                  >
+                    🚶 Não volta
+                  </button>
+                </span>
+              </div>
+            ))}
+
+          <button
+            className="grande"
+            onClick={iniciarVolta}
+            disabled={ocupado || estado.pendentesNaChamada.length > 0}
+          >
+            {estado.pendentesNaChamada.length > 0
+              ? `Faltam ${estado.pendentesNaChamada.length} na chamada`
+              : "▶️ Iniciar a volta"}
+          </button>
+        </section>
+      )}
+
+      {/* ---- VOLTA ---- */}
+      {estado.fase === "volta" && proxima && (
+        <section className="card acao-agora">
+          <small>Levando para casa · {estado.alunos.filter((a) => a.status === "voltando").length} na van</small>
+          <div className="acao-agora__aluno">
+            <span className="acao-agora__avatar">{proxima.avatar}</span>
+            <div>
+              <strong>{proxima.nome}</strong>
+              <p className="subtitulo">Deixar em casa</p>
+            </div>
+          </div>
+          <button className="grande verde" onClick={() => entregar(proxima)} disabled={ocupado}>
+            🏠 Entreguei {proxima.nome.split(" ")[0]} em casa
+          </button>
+        </section>
+      )}
+
+      {estado.fase === "encerrado" && (
+        <section className="card centro encerrado">
+          <h2>🎉 Dia concluído!</h2>
+          <p>
+            {estado.alunos.filter((a) => a.status === "em_casa").length} criança(s)
+            entregues em casa em segurança. Bom descanso, tio! 🚐
+          </p>
+          <button className="suave" onClick={reiniciar}>🔄 Recomeçar o dia (demonstração)</button>
+        </section>
+      )}
+
+      <p className="msg erro">{erro}</p>
+
+      {/* ---- Mapa ---- */}
+      <section className="card">
+        <h2>🗺️ O mapa do dia</h2>
+        <div className="legenda">
+          {estado.fase === "ida" || estado.fase === "encerrado" ? (
+            <>
+              <span className="verde">esperando / entregue</span>
+              <span className="vermelho">falta hoje</span>
+              <span className="azul">na van</span>
+            </>
+          ) : (
+            <>
+              <span className="vermelho">na van (indo pra casa)</span>
+              <span className="verde">entregue em casa</span>
+              <span className="roxo">na escola</span>
+            </>
+          )}
+        </div>
+
+        {alternativas.length > 0 && (
           <div className="alternativas">
             {alternativas.map((opcao, i) => (
               <button
@@ -226,74 +296,25 @@ export default function PainelMotorista() {
             ))}
           </div>
         )}
-
-        {!emTrajeto && rota?.paradas?.length > 0 && !concluido && (
-          <button className="iniciar" onClick={iniciarTrajeto}>
-            ▶️ Iniciar trajeto ({totalParadas} paradas + escola)
-          </button>
-        )}
-
-        {/* Painel do trajeto em andamento */}
-        {emTrajeto && (
-          <div className="trajeto-caixa">
-            {proximaParada ? (
-              <>
-                <div className="trajeto-proxima">
-                  <span className="trajeto-avatar">{proximaParada.avatar || "🧒"}</span>
-                  <div>
-                    <small>
-                      Parada {pegos.length + 1} de {totalParadas}
-                    </small>
-                    <strong>Buscar: {proximaParada.nome}</strong>
-                  </div>
-                </div>
-                <button className="pegar" onClick={() => marcarPego(proximaParada)}>
-                  ✅ Peguei {proximaParada.nome.split(" ")[0]} — próxima parada!
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="trajeto-proxima">
-                  <span className="trajeto-avatar">🏫</span>
-                  <div>
-                    <small>Todas as crianças na van! 🎉</small>
-                    <strong>Destino final: {rota?.escola?.nome || "Escola"}</strong>
-                  </div>
-                </div>
-                <button className="pegar" onClick={finalizarTrajeto}>
-                  🏁 Cheguei na escola — finalizar trajeto
-                </button>
-              </>
-            )}
-            <button className="mini suave" onClick={cancelarTrajeto}>✖ cancelar trajeto</button>
-          </div>
-        )}
-
-        {concluido && (
-          <div className="trajeto-caixa concluido">
-            🎉 <strong>Trajeto concluído!</strong> {pegos.length} criança(s) entregues
-            na escola em segurança. Bom trabalho, tio! 🚐
-          </div>
-        )}
+        <p className="msg">{msg}</p>
 
         <div className="mapa-moldura">
           <MapaVan
-            alunos={alunos}
-            rota={rota}
-            pegos={pegos}
+            alunos={estado.alunos}
+            escola={estado.escola}
+            posicaoVan={posicaoVan()}
             geometria={alternativas[escolhida]?.geometria ?? null}
           />
         </div>
 
-        {rota?.paradas?.length > 0 && (
+        {estado.alunos.length > 0 && (
           <ol className="ordem-lista">
-            {rota.paradas.map((parada) => (
-              <li key={parada.alunoId} className={pegos.includes(parada.alunoId) ? "feita" : ""}>
-                <strong>{parada.ordem}º</strong> — {parada.avatar || "🧒"} {parada.nome}
-                {pegos.includes(parada.alunoId) && " ✅"}
+            {estado.alunos.map((a) => (
+              <li key={a.alunoId} style={{ opacity: ["na_escola", "em_casa", "volta_ausente"].includes(a.status) ? 0.55 : 1 }}>
+                {a.avatar} <strong>{a.nome}</strong> — <span style={{ color: a.cor }}>{a.statusRotulo}</span>
+                {a.justificativa && <em className="subtitulo"> ({a.justificativa})</em>}
               </li>
             ))}
-            {rota.escola && <li>🏫 Destino final: {rota.escola.nome}</li>}
           </ol>
         )}
       </section>
