@@ -19,3 +19,13 @@
 // ============================================================
 
 window.__TOMTOM_KEY__ = "COLE_SUA_CHAVE_DO_TOMTOM_AQUI";
+
+// ------------------------------------------------------------
+//  BACKEND AO VIVO (opcional — Render)
+// ------------------------------------------------------------
+//  Se você fez o deploy do backend no Render, cole a URL dele aqui para o
+//  site usar o servidor de verdade (rastreamento ao vivo entre dispositivos).
+//  Deixe "" para manter a demo instantânea com o motor local.
+//  Ex.: "https://rotakids-api.onrender.com"
+window.__API_URL__ = "";
+

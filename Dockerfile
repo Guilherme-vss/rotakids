@@ -23,5 +23,7 @@ COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
 COPY --from=frontend /app/dist ./public
+# O init.sql é lido no boot (inicializarEsquema) — precisa estar na imagem.
+COPY db ./db
 EXPOSE 3000
 CMD ["node", "dist/index.js"]

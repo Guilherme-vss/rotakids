@@ -13,6 +13,27 @@ export function criarApp() {
   const app = express();
 
   app.use(express.json());
+
+  // CORS: o front publicado no GitHub Pages (outro domínio) precisa poder
+  // chamar este backend. Liberamos só os domínios conhecidos — não "*" —
+  // porque a API lida com dados de crianças (regra 2: segurança desde o início).
+  const origensPermitidas = [
+    "https://guilherme-vss.github.io",
+    "http://localhost:5173",
+    "http://localhost:5600",
+    ...(process.env.CORS_ORIGENS?.split(",").map((o) => o.trim()) ?? []),
+  ];
+  app.use((req, res, next) => {
+    const origem = req.headers.origin;
+    if (origem && origensPermitidas.includes(origem)) {
+      res.header("Access-Control-Allow-Origin", origem);
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    }
+    if (req.method === "OPTIONS") return res.sendStatus(204);
+    next();
+  });
+
   app.use(express.static(path.join(__dirname, "..", "public")));
 
   app.get("/api/saude", (_req, res) => res.json({ ok: true, servico: "rotakids" }));

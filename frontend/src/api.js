@@ -108,16 +108,31 @@ export function limparSessao(storage = localStorage) {
 
 import { motorLocal, usarMotorLocal } from "./motor-local.js";
 
+/**
+ * Base da API real (backend no Render). Vem de:
+ *   - window.__API_URL__  (config.local.js, gitignorado), OU
+ *   - ?api=https://...     na URL (para testar sem editar arquivo)
+ * Se não houver, usamos o motor local — a demo continua instantânea.
+ */
+function apiBase() {
+  if (typeof window === "undefined") return "";
+  const naUrl = new URLSearchParams(window.location.search).get("api");
+  return naUrl || window.__API_URL__ || "";
+}
+
 export async function api(caminho, { metodo = "GET", corpo = null } = {}) {
-  // Sem servidor (ex.: GitHub Pages), o motor local assume — os dados
-  // ficam salvos no próprio navegador e tudo continua funcionando.
-  // Ele roda o MESMO domínio do servidor (src/domain/*), não uma cópia.
-  if (usarMotorLocal()) {
+  const base = apiBase();
+
+  // Padrão do GitHub Pages: motor local (instantâneo, sem cold start, sempre no
+  // ar). Ele roda o MESMO domínio do servidor (src/domain/*), não uma cópia.
+  // Só vamos ao backend real quand há uma URL configurada — é lá que o
+  // rastreamento ao vivo ENTRE dispositivos faz sentido.
+  if (usarMotorLocal() && !base) {
     return motorLocal(caminho, metodo, corpo);
   }
 
   const sessao = lerSessao();
-  const resposta = await fetch("/api" + caminho, {
+  const resposta = await fetch(base + "/api" + caminho, {
     method: metodo,
     headers: {
       "Content-Type": "application/json",

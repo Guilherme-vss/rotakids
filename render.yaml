@@ -1,0 +1,40 @@
+# ============================================================
+#  render.yaml — deploy do RotaKids no Render (Blueprint)
+#
+#  Sobe DUAS coisas de uma vez:
+#    1. o backend Node/TypeScript (web service)
+#    2. um PostgreSQL gerenciado (free)
+#
+#  Como usar (passo a passo completo no README-DEPLOY.md):
+#    Render → New → Blueprint → conecte o repo Guilherme-vss/rotakids → Apply.
+#  O Render lê este arquivo, cria tudo e conecta o banco ao backend sozinho.
+# ============================================================
+
+databases:
+  - name: rotakids-db
+    plan: free
+    databaseName: rotakids
+    user: rotakids
+
+services:
+  - type: web
+    name: rotakids-api
+    runtime: node
+    plan: free
+    # O front é servido pelo GitHub Pages; aqui é só a API.
+    buildCommand: npm install && npm run build
+    startCommand: node dist/index.js
+    healthCheckPath: /api/saude
+    envVars:
+      # O Render injeta a URL do banco criado acima automaticamente.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rotakids-db
+          property: connectionString
+      - key: PGSSL
+        value: "true"
+      # Troque por um segredo forte no painel do Render (não versione aqui).
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
