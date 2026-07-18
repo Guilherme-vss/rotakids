@@ -22,7 +22,10 @@ services:
     runtime: node
     plan: free
     # O front é servido pelo GitHub Pages; aqui é só a API.
-    buildCommand: npm install && npm run build
+    # --include=dev é ESSENCIAL: o build precisa do TypeScript (devDependency),
+    # e como definimos NODE_ENV=production, sem esta flag o npm pularia as
+    # devDependencies e o `tsc` sumiria → build quebra. Foi o bug do 1º deploy.
+    buildCommand: npm install --include=dev && npm run build
     startCommand: node dist/index.js
     healthCheckPath: /api/saude
     envVars:
