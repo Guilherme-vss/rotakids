@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { GeoJSON, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
+import { temTransito, urlTransito } from "../config.js";
 
 /**
  * O mapa do RotaKids.
@@ -69,8 +70,18 @@ export default function MapaVan({ alunos = [], escola, posicaoVan, geometria = n
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {/* 🔌 Camada de trânsito entra aqui quando a chave estiver pronta:
-          <TileLayer url="https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=SUA_CHAVE" /> */}
+
+      {/* Camada de trânsito ao vivo (TomTom) — só aparece se houver chave.
+          Verde = fluindo, amarelo/vermelho = lento. O tio vê o congestionamento
+          e escolhe a rota; sem chave, o mapa segue funcionando igual. */}
+      {temTransito() && (
+        <TileLayer
+          url={urlTransito()}
+          opacity={0.75}
+          zIndex={5}
+          attribution='Trânsito &copy; <a href="https://www.tomtom.com">TomTom</a>'
+        />
+      )}
 
       <Enquadrar pontos={foco ? [foco] : pontos} />
 

@@ -8,6 +8,17 @@
 </head>
 <body>
   <div id="root"></div>
+  <!-- Chave do mapa de trânsito (opcional). O arquivo config.local.js é
+       gitignorado; se não existir, o mapa funciona sem a camada de trânsito.
+       Carregado dinamicamente para não deixar erro 404 no console. -->
+  <script>
+    (function () {
+      var s = document.createElement("script");
+      s.src = "config.local.js";
+      s.onerror = function () { /* sem chave: segue sem trânsito */ };
+      document.head.appendChild(s);
+    })();
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

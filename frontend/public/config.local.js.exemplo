@@ -1,0 +1,21 @@
+// ============================================================
+//  COMO ATIVAR O TRÂNSITO NO MAPA (TomTom)
+// ============================================================
+//
+//  1. Copie ESTE arquivo, na mesma pasta, com o nome:
+//         config.local.js
+//     (sem o ".exemplo"). Esse novo arquivo é IGNORADO pelo Git —
+//      sua chave nunca vai para o GitHub.
+//
+//  2. Cole a sua chave do TomTom na linha abaixo, entre as aspas.
+//
+//  3. RESTRINJA A CHAVE (passo de segurança, não pule!):
+//     No painel do TomTom → sua Key → "Domain restriction", adicione:
+//        - localhost                      (para testar na sua máquina)
+//        - guilherme-vss.github.io        (para o site publicado)
+//     Assim, mesmo visível no navegador, a chave só funciona nos SEUS sites.
+//
+//  Sem este arquivo, o mapa funciona igual — só não mostra o trânsito.
+// ============================================================
+
+window.__TOMTOM_KEY__ = "COLE_SUA_CHAVE_DO_TOMTOM_AQUI";
